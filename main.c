@@ -18,11 +18,13 @@ typedef union {
     } parts;
 } flt_or_int;
 
+
 typedef struct span {
     char* id;
     flt_or_int min;
     flt_or_int max;
 } Span;
+
 
 void must_alloc(void* ptr, const char* desc){
     if(!ptr){
@@ -30,6 +32,7 @@ void must_alloc(void* ptr, const char* desc){
         exit(1);
     }
 }
+
 
 Span* new_span(char* id, float min, float max){
     Span* new = malloc(sizeof(Span));
@@ -53,16 +56,17 @@ Span* add(char* id, Span* A, Span* B){
     float min, max;
     min = A->min.f + B->min.f;
     max = A->max.f + B->max.f;
-    min = nextafterf(min, FLT_MIN);
+    min = nextafterf(min, -FLT_MIN);
     max = nextafterf(max, FLT_MAX);
     return new_span(id, min, max);
 }
+
 
 Span* sub(char* id, Span* A, Span* B){
     float min, max;
     min = A->min.f - B->max.f;
     max = A->max.f - B->min.f;
-    min = nextafterf(min, FLT_MIN);
+    min = nextafterf(min, -FLT_MIN);
     max = nextafterf(max, FLT_MAX);
     return new_span(id, min, max);
 }
@@ -98,11 +102,12 @@ Span* mult(char* id, Span* A, Span* B){
 
     float min = get_min(nums, 4);
     float max = get_max(nums, 4);
-    min = nextafterf(min, FLT_MIN);
+    min = nextafterf(min, -FLT_MIN);
     max = nextafterf(max, FLT_MAX);
 
     return new_span(id, min, max);
 }
+
 
 Span* divi(char* id, Span* A, Span* B){
     float min, max;
@@ -122,30 +127,28 @@ Span* divi(char* id, Span* A, Span* B){
         min = get_min(nums, 4);
         max = get_max(nums, 4);
 
-        min = nextafterf(min, FLT_MIN);
+        min = nextafterf(min, -FLT_MIN);
         max = nextafterf(max, FLT_MAX);
     }
 
     return new_span(id, min, max);
 }
 
+
 int almost_equal(flt_or_int A, flt_or_int B){
-    if (A.parts.sign != B.parts.sign){
-        if (A.f == B.f)
-            return 1;
-        return 0;
-    }
     int ulpsDiff = A.i - B.i;
     if (abs(ulpsDiff) <= ULP_TOLERANCE)
         return 1;
     return 0;
 }
 
+
 void magic_print(flt_or_int num){
     printf("f:%1.9e, ix:0x%08X, s:%d, e:%d, mx:0x%06X\n",
             num.f, num.i,
             num.parts.sign, num.parts.exponent, num.parts.mantissa); 
 }
+
 
 void print_results(Span** v, int size, int assignments){
     for(int i = 0; i < size; i++){
@@ -205,12 +208,16 @@ void main(){
                     break;
             }
         }
-        
         else {
             flt_or_int num, min, max;
             num.f = atof(aux);
-            min.f = nextafterf(num.f, FLT_MIN);
-            max.f = nextafterf(num.f, FLT_MAX);  
+            min.f = nextafterf(num.f, -FLT_MIN);
+            max.f = nextafterf(num.f, FLT_MAX);
+
+            magic_print(min);
+            magic_print(num);
+            magic_print(max);
+            printf("---------\n");
             values[name_to_index(identifier)] = new_span(identifier, min.f, max.f);
         }
     }
