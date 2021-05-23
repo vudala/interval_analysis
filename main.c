@@ -4,6 +4,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
+#include <ctype.h>
 
 #define WORDSIZE 100
 #define ULP_TOLERANCE 2
@@ -37,11 +38,13 @@ void must_alloc(void* ptr, const char* desc){
 Span* new_span(char* id, float min, float max){
     Span* new = malloc(sizeof(Span));
     must_alloc(new, "new span");
+
     new->min.f = min;
     new->max.f = max;
     new->id = malloc(sizeof(char) * WORDSIZE);
     must_alloc(new->id, "new span ID");
     strcpy(new->id, id);
+    
     return new;
 }
 
@@ -54,20 +57,30 @@ int name_to_index(char* name){
 
 Span* add(char* id, Span* A, Span* B){
     float min, max;
+
     min = A->min.f + B->min.f;
     max = A->max.f + B->max.f;
-    min = nextafterf(min, -FLT_MIN);
-    max = nextafterf(max, FLT_MAX);
+
+    if (min != -INFINITY)
+        min = nextafterf(min, -FLT_MAX);
+    if (max != INFINITY)
+        max = nextafterf(max, FLT_MAX);
+
     return new_span(id, min, max);
 }
 
 
 Span* sub(char* id, Span* A, Span* B){
     float min, max;
+
     min = A->min.f - B->max.f;
     max = A->max.f - B->min.f;
-    min = nextafterf(min, -FLT_MIN);
-    max = nextafterf(max, FLT_MAX);
+
+    if (min != -INFINITY)
+        min = nextafterf(min, -FLT_MAX);
+    if (max != INFINITY)
+        max = nextafterf(max, FLT_MAX);
+    
     return new_span(id, min, max);
 }
 
@@ -102,8 +115,11 @@ Span* mult(char* id, Span* A, Span* B){
 
     float min = get_min(nums, 4);
     float max = get_max(nums, 4);
-    min = nextafterf(min, -FLT_MIN);
-    max = nextafterf(max, FLT_MAX);
+
+    if (min != -INFINITY)
+        min = nextafterf(min, -FLT_MAX);
+    if (max != INFINITY)
+        max = nextafterf(max, FLT_MAX);
 
     return new_span(id, min, max);
 }
@@ -127,8 +143,10 @@ Span* divi(char* id, Span* A, Span* B){
         min = get_min(nums, 4);
         max = get_max(nums, 4);
 
-        min = nextafterf(min, -FLT_MIN);
-        max = nextafterf(max, FLT_MAX);
+        if (min != -INFINITY)
+            min = nextafterf(min, -FLT_MAX);
+        if (max != INFINITY)
+            max = nextafterf(max, FLT_MAX);
     }
 
     return new_span(id, min, max);
@@ -136,6 +154,9 @@ Span* divi(char* id, Span* A, Span* B){
 
 
 int almost_equal(flt_or_int A, flt_or_int B){
+    if (A.f == -INFINITY || B.f == INFINITY)
+        return 0;
+
     int ulpsDiff = A.i - B.i;
     if (abs(ulpsDiff) <= ULP_TOLERANCE)
         return 1;
@@ -144,7 +165,7 @@ int almost_equal(flt_or_int A, flt_or_int B){
 
 
 void magic_print(flt_or_int num){
-    printf("f:%1.9e, ix:0x%08X, s:%d, e:%d, mx:0x%06X\n",
+    printf("f:%1.8e, ix:0x%08X, s:%d, e:%d, mx:0x%06X\n",
             num.f, num.i,
             num.parts.sign, num.parts.exponent, num.parts.mantissa); 
 }
@@ -152,13 +173,14 @@ void magic_print(flt_or_int num){
 
 void print_results(Span** v, int size, int assignments){
     for(int i = 0; i < size; i++){
-        printf("%s = [%1.8e , %1.8e]\n", v[i]->id, v[i]->min.f, v[i]->max.f);
+        printf("%s = [%20.8e, %20.8e]\n", v[i]->id, v[i]->min.f, v[i]->max.f);
     }
+
 
     printf("\nNão unitários:\n");
     for(int i = assignments; i < size; i++){
         if( !almost_equal(v[i]->min, v[i]->max) ){
-            printf("%s = [%1.9e , %1.8e]\n", v[i]->id, v[i]->min.f, v[i]->max.f);
+            printf("%s = [%20.8e, %20.8e]\n", v[i]->id, v[i]->min.f, v[i]->max.f);
         }
     }
 }
@@ -181,6 +203,9 @@ void main(){
 
     while(fgets(line, WORDSIZE, stdin)){
         char* identifier = strtok(line, " ");
+        for(int i = 0; i < strlen(identifier); i++)
+            identifier[i] = toupper(identifier[i]);
+        
         char* aux = strtok(NULL, " ");
 
         if(!strcmp(aux, "=")){
@@ -211,13 +236,8 @@ void main(){
         else {
             flt_or_int num, min, max;
             num.f = atof(aux);
-            min.f = nextafterf(num.f, -FLT_MIN);
+            min.f = nextafterf(num.f, -FLT_MAX);
             max.f = nextafterf(num.f, FLT_MAX);
-
-            magic_print(min);
-            magic_print(num);
-            magic_print(max);
-            printf("---------\n");
             values[name_to_index(identifier)] = new_span(identifier, min.f, max.f);
         }
     }
