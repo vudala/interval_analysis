@@ -1,14 +1,17 @@
 CC = gcc
 LIBS = -lm
 SRC = main.c
+OBJS = interval.o
 OUTPUT = program
-TEST_INPUT = input.txt
 
-all:
-	$(CC) $(SRC) -o $(OUTPUT) $(LIBS) 
+all: $(OBJS)
+	$(CC) $(SRC) $(OBJS) -o $(OUTPUT) $(LIBS)
 
-purge:
+interval.o: interval.c
+	gcc -c interval.c $(LIBS)
+
+clean:
+	rm $(OBJS)
+
+purge: clean
 	rm $(OUTPUT)
-
-test:
-	./$(OUTPUT) < $(TEST_INPUT)
