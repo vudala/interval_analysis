@@ -1,3 +1,5 @@
+// Eduardo Vudala Senoski GRR20195689
+
 #include "interval.h"
 #include <math.h>
 #include <stdlib.h>
@@ -6,7 +8,7 @@
 
 void must_alloc(void* ptr, const char* desc){
     if(!ptr){
-        printf("Couldn't allocate memory for %s.", desc);
+        fprintf(stderr, "Couldn't allocate memory for %s.", desc);
         exit(1);
     }
 }

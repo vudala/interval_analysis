@@ -1,3 +1,5 @@
+# Eduardo Vudala Senoski GRR20195689
+
 CC = gcc
 LIBS = -lm
 SRC = main.c

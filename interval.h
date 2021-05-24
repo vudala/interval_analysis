@@ -1,3 +1,5 @@
+// Eduardo Vudala Senoski GRR20195689
+
 #ifndef INTERVAL_INCLUDED
 #define INTERVAL_INCLUDED
 
@@ -26,6 +28,7 @@ Interval* new_interval(char* id, float min, float max);
 
 int name_to_index(char* name);
 
+// operações
 Interval* add(char* id, Interval* A, Interval* B);
 Interval* sub(char* id, Interval* A, Interval* B);
 Interval* mult(char* id, Interval* A, Interval* B);

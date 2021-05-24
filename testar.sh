@@ -1,9 +1,3 @@
-# for file in teste/*.in; do
-#     cat $file > input.txt
-#     make test
-#     diff result.out ${file/.in/.out}
-# done
-
 make
 for file in teste/*.in; do
     echo $file
